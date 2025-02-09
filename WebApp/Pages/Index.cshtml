@@ -1,0 +1,96 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Stellaris Save Game Editor";
+}
+
+<div class="container">
+    <h1 class="display-4 mb-4">Stellaris Save Game Editor</h1>
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Upload Save Game</h5>
+            @if (!ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <li>@error.ErrorMessage</li>
+                        }
+                    </ul>
+                </div>
+            }
+            <form method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <input type="file" class="form-control" name="saveFile" id="saveFile" accept=".sav">
+                </div>
+                <button type="submit" class="btn btn-primary">Upload Save</button>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.HasUploadedFile)
+    {
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Save File Actions</h5>
+                <button class="btn btn-success" id="downloadBtn">Download Save</button>
+                <div id="downloadError" class="alert alert-danger mt-3" style="display: none;"></div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function parseFilename(disposition) {
+            if (!disposition) return null;
+            
+            // Try UTF-8 filename
+            let utf8Match = /filename\*=UTF-8''([^;]+)/.exec(disposition);
+            if (utf8Match) {
+                return decodeURIComponent(utf8Match[1]);
+            }
+            
+            // Try regular filename
+            let match = /filename="?([^";\n]+)"?/.exec(disposition);
+            return match ? match[1] : null;
+        }
+
+        document.getElementById('downloadBtn')?.addEventListener('click', async () => {
+            const errorDiv = document.getElementById('downloadError');
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/Index?handler=Download');
+                if (!response.ok) {
+                    const errorMessage = await response.text();
+                    throw new Error(errorMessage || 'Error downloading file');
+                }
+
+                const blob = await response.blob();
+                const disposition = response.headers.get('Content-Disposition');
+                let filename = parseFilename(disposition);
+                
+                if (!filename) {
+                    // Fallback filename if we couldn't parse it
+                    filename = 'stellaris_save_edited.sav';
+                }
+
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (error) {
+                console.error('Download error:', error);
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+}
