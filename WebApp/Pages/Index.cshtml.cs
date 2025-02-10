@@ -25,6 +25,8 @@ public class IndexModel : PageModel
     {
     }
 
+    public SaveGameInfo? GetSaveInfo() => _gameStateService.GetCurrentSaveInfo();
+
     public async Task<IActionResult> OnPostAsync(IFormFile saveFile)
     {
         if (saveFile == null || saveFile.Length == 0)
