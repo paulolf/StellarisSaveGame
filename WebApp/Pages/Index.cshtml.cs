@@ -11,11 +11,11 @@ namespace WebApp.Pages;
 public class IndexModel : PageModel
 {
     private readonly ILogger<IndexModel> _logger;
-    private readonly GameStateService _gameStateService;
+    private readonly IGameStateService _gameStateService;
 
     public bool HasUploadedFile => _gameStateService.HasSaveFile();
 
-    public IndexModel(ILogger<IndexModel> logger, GameStateService gameStateService)
+    public IndexModel(ILogger<IndexModel> logger, IGameStateService gameStateService)
     {
         _logger = logger;
         _gameStateService = gameStateService;

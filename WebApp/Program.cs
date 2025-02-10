@@ -4,7 +4,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddSingleton<GameStateService>();
+builder.Services.AddControllersWithViews();
+
+// Register GameStateService as Singleton to maintain state across requests
+builder.Services.AddSingleton<IGameStateService, GameStateService>();
 
 var app = builder.Build();
 
@@ -24,5 +27,8 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
